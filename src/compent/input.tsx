@@ -13,14 +13,11 @@ const Input = () => {
     });
 
     // 推薦：把更新封裝成純值的 API，而不是直接操作事件物件
-    const update = (field, value) =>
+    const update = (field:string, value:) =>
         setFormData(prev => ({ ...prev, [field]: value }));
 
 
-    useEffect(() => {
-        // 只在值真的變時才 set，避免不必要 re-render
-        setFormData(prev => (prev.toAmt === computedToAmt ? prev : { ...prev, toAmt: computedToAmt }));
-    }, [computedToAmt]);
+
 
 
 
@@ -31,7 +28,7 @@ const Input = () => {
 
                     <div className="col-5 d-flex justify-content-center align-items-start flex-column p-lg-5 ">
                         <h3>Unit conversion</h3>
-                        <select name="valueOne" id="" className="form-select my-3" onChange={handleChange} value={inputCurrency.currencyValue}>
+                        <select name="valueOne" id="" className="form-select my-3"  value={formData.fromCur}   onChange={(e) => update("fromCur", e.target.value)}>
 
                             {/* value 1  */}
                             <option value="TWD">TWD</option>
@@ -42,7 +39,7 @@ const Input = () => {
 
                         </select>
                         {/* value 2  */}
-                        <input type="text" name="" id="" className="form-control" placeholder="Enter amount p-lg-5" />
+                        <input type="text" name="" id="" className="form-control" placeholder="Enter amount p-lg-5"  value={formData.fromAmt} onChange={(e) => update("fromAmt", e.target.value)} />
                     </div>
 
                     <div className="col-5 d-flex justify-content-center align-items-start flex-column ">
