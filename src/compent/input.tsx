@@ -1,66 +1,117 @@
-import { useState,useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getLatest } from "../services/ratesLatest";
 
-const Input = () => {
+type Rates = Record<string, number>;
 
+const fallbackRates: Rates = { USD: 1, TWD: 32.3, EUR: 0.92, JPY: 156.4 };
 
-
-
-    const [formData, setFormData] = useState({
-        fromCur: "TWD",   // value1
-        fromAmt: "",      // value2
-        toCur: "USD",     // value3
-        toAmt: ""         // value4（通常由運算得出）
-    });
-
-    // 推薦：把更新封裝成純值的 API，而不是直接操作事件物件
-    const update = (field:string, value:) =>
-        setFormData(prev => ({ ...prev, [field]: value }));
-
-
-
-
-
-
-    return (
-        <>
-            <section className="pt-5 pb-3 section-input" >
-                <div className="row justify-content-center align-items-center ">
-
-                    <div className="col-5 d-flex justify-content-center align-items-start flex-column p-lg-5 ">
-                        <h3>Unit conversion</h3>
-                        <select name="valueOne" id="" className="form-select my-3"  value={formData.fromCur}   onChange={(e) => update("fromCur", e.target.value)}>
-
-                            {/* value 1  */}
-                            <option value="TWD">TWD</option>
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                            <option value="JPY">JPY</option>
-
-
-                        </select>
-                        {/* value 2  */}
-                        <input type="text" name="" id="" className="form-control" placeholder="Enter amount p-lg-5"  value={formData.fromAmt} onChange={(e) => update("fromAmt", e.target.value)} />
-                    </div>
-
-                    <div className="col-5 d-flex justify-content-center align-items-start flex-column ">
-                        <h3>Unit conversion</h3>
-                        <select name="" id="" className="form-select my-3">
-                            {/* value 3  */}
-                            <option value="TWD">TWD</option>
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                            <option value="JPY">JPY</option>
-                        </select>
-
-                        {/* value 4  */}
-                        <input type="text" name="" id="" className="form-control" placeholder="Enter amount " />
-                    </div>
-
-                </div>
-            </section>
-        </>
-    )
+function convertAmount(
+  amountString: string,
+  fromCurrency: string,
+  toCurrency: string,
+  rates: Rates
+) {
+  const numericAmount = Number(amountString);
+  if (!amountString || Number.isNaN(numericAmount)) return "";
+  const fromRate = rates[fromCurrency];
+  const toRate = rates[toCurrency];
+  if (!fromRate || !toRate) return "";
+  const amountInBase = numericAmount / fromRate;
+  const convertedAmount = amountInBase * toRate;
+  return convertedAmount.toFixed(2);
 }
 
+export default function ConverterTwoWay() {
+  const [rates, setRates] = useState<Rates>(fallbackRates);
 
-export default Input;
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const latest = await getLatest("USD", ["USD", "TWD", "EUR", "JPY", "CNY"]);
+        if (!mounted) return;
+
+        const base = (latest.base ?? "USD").toUpperCase();
+        const next: Rates = { [base]: 1, ...(latest.rates ?? {}) };
+
+        // 正規化：key 全大寫、值轉數字
+        const normalized = Object.fromEntries(
+          Object.entries(next).map(([k, v]) => [k.toUpperCase(), Number(v)])
+        ) as Rates;
+
+        setRates(normalized);
+      } catch (err) {
+        console.error("getLatest failed:", err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  const currencyOptions = useMemo(() => Object.keys(rates).sort(), [rates]);
+
+  const [formData, setFormData] = useState({
+    fromCur: "TWD",
+    toCur: "USD",
+    source: "from" as "from" | "to",
+    amt: "",
+  });
+  const update = (patch: Partial<typeof formData>) =>
+    setFormData((prev) => ({ ...prev, ...patch }));
+
+  // 依賴加入 rates
+  const fromAmount = useMemo(() => {
+    return formData.source === "from"
+      ? formData.amt
+      : convertAmount(formData.amt, formData.toCur, formData.fromCur, rates);
+  }, [formData.amt, formData.source, formData.fromCur, formData.toCur, rates]);
+
+  const toAmount = useMemo(() => {
+    return formData.source === "to"
+      ? formData.amt
+      : convertAmount(formData.amt, formData.fromCur, formData.toCur, rates);
+  }, [formData.amt, formData.source, formData.fromCur, formData.toCur, rates]);
+
+  return (
+    <section className="pt-5 pb-3 section-input">
+      <div className="row justify-content-center align-items-start">
+        <div className="col-5 p-lg-5 d-flex flex-column">
+          <h3>Unit conversion (From)</h3>
+          <select
+            className="form-select my-3"
+            value={formData.fromCur}
+            onChange={(event) => update({ fromCur: event.target.value })}
+          >
+            {currencyOptions.map((code) => (
+              <option key={code} value={code}>{code}</option>
+            ))}
+          </select>
+          <input
+            className="form-control"
+            placeholder="Enter amount"
+            value={fromAmount}
+            onChange={(event) => update({ source: "from", amt: event.target.value })}
+          />
+        </div>
+
+        <div className="col-5  p-lg-5 d-flex flex-column">
+          <h3>Unit conversion (To)</h3>
+          <select
+            className="form-select my-3"
+            value={formData.toCur}
+            onChange={(event) => update({ toCur: event.target.value })}
+          >
+            {currencyOptions.map((code) => (
+              <option key={code} value={code}>{code}</option>
+            ))}
+          </select>
+          <input
+            className="form-control"
+            placeholder="Enter amount"
+            value={toAmount}
+            onChange={(event) => update({ source: "to", amt: event.target.value })}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
