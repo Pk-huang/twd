@@ -19,7 +19,7 @@ export default function TopControls({
 }: Props) {
   return (
     <>
-      <div className="col-5 p-lg-5 d-flex flex-column">
+      <div className="col-5  d-flex flex-column">
         <h3>Unit conversion (From)</h3>
         <select
           className="form-select my-3"
