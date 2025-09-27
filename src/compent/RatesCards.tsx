@@ -85,16 +85,14 @@ export default function RatesCards({
 
                 {/* 右欄：依照當前匯率計算 (baseCode × Unit conversion) */}
                 <div className="col ">
-                  <h2 className="h4">依照當前匯率計算</h2>
+                  <h2 className="h4">依照當前匯率計算 Unit conversion</h2>
                   <div className="mt-2">
                   <div className="fs-5 mt-2">
-                      <span className="fw-bold">{toCur}</span>{" "}
-                      <span>{highlightConverted || "0"} = </span>
+                     
                    
                       <span className="fw-bold">{amountInThisBase || "0"}</span>{" "}
                       <span className="fw-bold">{baseCode}</span>
-                      <span className="mx-2">×</span>
-                      <span className="fw-bold">{unitRateBaseToToCur || "—"}</span>
+                
                     </div>
                 
                   </div>
