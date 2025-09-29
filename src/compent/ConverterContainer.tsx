@@ -3,8 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import TopControls from "./TopControls";
 import RatesCards from "./RatesCards";
 import { getLatest } from "../services/ratesLatest";
+import { getTimeseries } from "../services/ratesTimeseries";
 import convertAmount from "../function/convertAmount";
-import type { Rates, FormState, Card } from "../function/types";
+import type { Rates, FormState } from "../function/types";
 import RatesLineChart from "./RatesLineChart";
 import { makeMockSeries } from "../function/series";
 
@@ -81,18 +82,7 @@ export default function ConverterContainer() {
             : convertAmount(formData.amt, formData.toCur, formData.fromCur, rates);
     }, [formData.amt, formData.source, formData.fromCur, formData.toCur, rates]);
 
-    // 卡片資料
-    const cards: Card[] = useMemo(() => {
-        if (!baseAmountInFromCur) return [];
-        return WATCH_LIST.filter((code) => !!rates[code]).map((code) => {
-            const unitRate =
-                rates[formData.fromCur] && rates[code]
-                    ? (rates[code] / rates[formData.fromCur]).toFixed(4)
-                    : "-";
-            const converted = convertAmount(baseAmountInFromCur, formData.fromCur, code, rates);
-            return { code, unitRate: String(unitRate), converted: String(converted) };
-        });
-    }, [rates, formData.fromCur, baseAmountInFromCur]);
+
 
     const currentUnitRate =
         rates[formData.fromCur] && rates[formData.toCur]
@@ -105,6 +95,12 @@ export default function ConverterContainer() {
         [currentUnitRate]
     );
 
+    getTimeseries({
+        base: 'USD', // formData.fromCur,
+        symbol: 'JPY', // Adjusted to pass a single currency as required
+        start: "2023-01-01",
+        end: "2023-01-31",
+    })
 
     return (
         <>

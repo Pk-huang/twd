@@ -1,39 +1,42 @@
-import { FRANKFURTER_BASE } from "./defaultAPI";
-import type { TimeseriesResponse } from "./defaultAPI";
+// services/ratesTimeseries.ts
+export type Timeseries = Record<string, number>;
 
+type GetTimeseriesParams = {
+  base: string;   // 來源幣別，例如 "USD"
+  symbol: string; // 目標幣別，例如 "TWD"
+  start: string;  // 開始日期 "YYYY-MM-DD"
+  end: string;    // 結束日期 "YYYY-MM-DD"
+};
 
-// ====================
-// API：區間/歷史（免金鑰，用 Frankfurter timeseries）
-//   說明：為了你的曲線圖，這裡用 Frankfurter（ECB）提供的 timeseries。
-//   你仍然可以用任意 base，Frankfurter 支援 base 參數。
-// ====================
-export async function getTimeseries(params: {
-  start: string; // YYYY-MM-DD
-  end: string;   // YYYY-MM-DD
-  base: string;
-  symbol: string; // 建議一次取一種幣別來畫線
-}): Promise<TimeseriesResponse> {
-  const { start, end, base, symbol } = params;
-  try {
-    const qs = new URLSearchParams({
-      start_date: start,
-      end_date: end,
-      base,
-      symbols: symbol,
-    });
-    const res = await fetch(`${FRANKFURTER_BASE}/v1/${start}..${end}?base=${base}&symbol=${symbol}`);
-    console.log("fetch", `${FRANKFURTER_BASE}/timeseries?${qs.toString()}`);
-    if (!res.ok) throw new Error(`getTimeseries failed: HTTP ${res.status}`);
-    const d = await res.json();
-    // d: { amount, base, start_date, end_date, rates: { '2025-08-01': { USD: 0.031 }, ... } }
-    return {
-      base: d.base,
-      start_date: d.start_date,
-      end_date: d.end_date,
-      rates: d.rates as Record<string, Record<string, number>>,
-    };
-  } catch (err) {
-    console.error("[getTimeseries] Error:", err);
-    throw err;
+export async function getTimeseries({ base, symbol, start, end }: GetTimeseriesParams) {
+  const url = new URL("https://api.exchangerate.host/timeseries");
+  url.searchParams.set("base", base.toUpperCase());
+  url.searchParams.set("symbols", symbol.toUpperCase());
+  url.searchParams.set("start_date", start);
+  url.searchParams.set("end_date", end);
+
+  const res = await fetch(url.toString());
+  console.log("timeseries URL:", url.toString());
+  if (!res.ok) throw new Error(`timeseries HTTP ${res.status}`);
+
+  const json = await res.json() as {
+    success: boolean;
+    rates: Record<string, Record<string, number>>;
+  };
+
+  if (!json.success) throw new Error("timeseries failed");
+
+  const out: Timeseries = {};
+  const sym = symbol.toUpperCase();
+
+  for (const [date, perDay] of Object.entries(json.rates ?? {})) {
+    const v = perDay[sym];
+    if (typeof v === "number") out[date] = v;
   }
+
+  if (Object.keys(out).length === 0) {
+    throw new Error(`timeseries empty: provider may not support ${sym}`);
+  }
+
+  return out;
 }
