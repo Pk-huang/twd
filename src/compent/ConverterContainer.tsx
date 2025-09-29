@@ -5,6 +5,9 @@ import RatesCards from "./RatesCards";
 import { getLatest } from "../services/ratesLatest";
 import convertAmount from "../function/convertAmount";
 import type { Rates, FormState, Card } from "../function/types";
+import RatesLineChart from "./RatesLineChart";
+import { makeMockSeries } from "../function/series";
+
 
 const WATCH_LIST = ["USD", "TWD", "EUR", "JPY", "CNY"] as const;
 
@@ -91,6 +94,18 @@ export default function ConverterContainer() {
         });
     }, [rates, formData.fromCur, baseAmountInFromCur]);
 
+    const currentUnitRate =
+        rates[formData.fromCur] && rates[formData.toCur]
+            ? rates[formData.toCur] / rates[formData.fromCur]
+            : 0;
+
+    // 先用 mock 產 14 天序列；等你有 API 再換 buildSeriesFromTimeseries(...)
+    const lineSeries = useMemo(
+        () => makeMockSeries(currentUnitRate, 14),
+        [currentUnitRate]
+    );
+
+
     return (
         <>
             {/* loading / error 提示（可自行美化） */}
@@ -98,14 +113,24 @@ export default function ConverterContainer() {
             {errorMsg && <div className="alert alert-danger my-3">Failed to load rates: {errorMsg}</div>}
 
             {/* 上方輸入區 */}
-            <div className="row justify-content-center align-items-start">
-                <TopControls
-                    currencyOptions={currencyOptions}
-                    fromAmount={fromAmount ?? ""}
-                    toAmount={toAmount ?? ""}
-                    formData={formData}
-                    onChange={update}
-                />
+            <div className="row align-items-start">
+                <div className="col-6">
+                    <TopControls
+                        currencyOptions={currencyOptions}
+                        fromAmount={fromAmount ?? ""}
+                        toAmount={toAmount ?? ""}
+                        formData={formData}
+                        onChange={update}
+                    />
+                </div>
+                <div className="col-6">
+                    <RatesLineChart
+                        fromCurrency={formData.fromCur}
+                        toCurrency={formData.toCur}
+                        series={lineSeries}
+                    />
+                </div>
+
             </div>
 
             {/* 下方卡片（單張：左基準 + 中列表 + 右重點） */}

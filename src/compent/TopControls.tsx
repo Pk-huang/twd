@@ -19,7 +19,10 @@ export default function TopControls({
 }: Props) {
   return (
     <>
-      <div className="col-5  d-flex flex-column">
+    <div className="row">
+
+  
+      <div className="col-12  d-flex flex-column">
         <h3>Unit conversion (From)</h3>
         <select
           className="form-select my-3"
@@ -40,7 +43,7 @@ export default function TopControls({
         />
       </div>
 
-      <div className="col-5 d-flex flex-column">
+      <div className="col-12 d-flex flex-column">
         <h3>Unit conversion (To)</h3>
         <select
           className="form-select my-3"
@@ -59,6 +62,7 @@ export default function TopControls({
           value={toAmount}
           onChange={(e) => onChange({ source: "to", amt: e.target.value })}
         />
+      </div>
       </div>
     </>
   );
