@@ -7,17 +7,15 @@ import { getLatest } from "../services/ratesLatest";
 import convertAmount from "../function/convertAmount";
 import type { Rates, FormState } from "../function/types";
 import RatesLineChart from "./RatesLineChart";
-import { makeMockSeries } from "../function/series";
+import { buildSeriesFromTimeseries } from "../function/series";
 
 import {  fetchTimeseries } from "../services/rates.repository";
 
 
-fetchTimeseries("USD", "JPY", "2024-01-01", "2024-01-14").then(console.log)
 
-const WATCH_LIST = ["USD", "TWD", "EUR", "JPY", "CNY"] as const;
+const WATCH_LIST = ["USD", "EUR", "JPY", "CNY"] as const;
 
-// 後備匯率（API 尚未回來前可先用）
-const fallbackRates: Rates = { USD: 1, TWD: 32.3, EUR: 0.92, JPY: 156.4, CNY: 7.25 };
+const fallbackRates: Rates = {};
 
 export default function ConverterContainer() {
     // 匯率
@@ -27,8 +25,8 @@ export default function ConverterContainer() {
 
     // 表單狀態
     const [formData, setFormData] = useState<FormState>({
-        fromCur: "TWD",
-        toCur: "USD",
+        fromCur: "USD",
+        toCur: "EUR",
         source: "from",
         amt: "",
     });
@@ -87,19 +85,23 @@ export default function ConverterContainer() {
     }, [formData.amt, formData.source, formData.fromCur, formData.toCur, rates]);
 
 
+    const [timeseriesData, setTimeseriesData] = useState<Record<string, number>>({});
+   
+    useEffect(() => {
+        (async () => {
+            try {
+                const data = await fetchTimeseries(formData.fromCur ,formData.toCur, "2024-01-01", "2024-01-14");
+                setTimeseriesData(data);
+            } catch (error) {
+                console.error(error);
+            }
+        })();
+    }, []);
 
-    const currentUnitRate =
-        rates[formData.fromCur] && rates[formData.toCur]
-            ? rates[formData.toCur] / rates[formData.fromCur]
-            : 0;
-
-    // 先用 mock 產 14 天序列；等你有 API 再換 buildSeriesFromTimeseries(...)
     const lineSeries = useMemo(
-        () => makeMockSeries(currentUnitRate, 14),
-        [currentUnitRate]
+        () => buildSeriesFromTimeseries(timeseriesData),
+        [timeseriesData]
     );
-
- 
 
     return (
         <>

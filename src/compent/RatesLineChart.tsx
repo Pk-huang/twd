@@ -26,7 +26,7 @@ import {
       const d = new Date(isoDate);
       return `${d.getMonth() + 1}/${d.getDate()}`;
     };
-  
+  console.log('series' , series);
     const tooltipFormatter = (val: number) => val.toFixed(4);
     const tooltipLabelFormatter = (isoDate: string) => {
       const d = new Date(isoDate);

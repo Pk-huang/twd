@@ -18,7 +18,7 @@ export const FrankfurterTimeseriesProvider: RatesProvider = {
     url.searchParams.set("base", baseCurrency.toUpperCase());
     url.searchParams.set("symbols", symbolCurrency.toUpperCase());
  
-  
+     console.log("Frankfurter timeseries URL:", url.toString());
     const response = await fetch(url.toString());
     
     if (!response.ok) {
