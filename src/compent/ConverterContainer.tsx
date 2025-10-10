@@ -3,12 +3,16 @@ import { useEffect, useMemo, useState } from "react";
 import TopControls from "./TopControls";
 import RatesCards from "./RatesCards";
 import { getLatest } from "../services/ratesLatest";
-import { getTimeseries } from "../services/ratesTimeseries";
+// import { getTimeseries } from "../services/ratesTimeseries";
 import convertAmount from "../function/convertAmount";
 import type { Rates, FormState } from "../function/types";
 import RatesLineChart from "./RatesLineChart";
 import { makeMockSeries } from "../function/series";
 
+import {  fetchTimeseries } from "../services/rates.repository";
+
+
+fetchTimeseries("USD", "JPY", "2024-01-01", "2024-01-14").then(console.log)
 
 const WATCH_LIST = ["USD", "TWD", "EUR", "JPY", "CNY"] as const;
 
@@ -95,12 +99,7 @@ export default function ConverterContainer() {
         [currentUnitRate]
     );
 
-    getTimeseries({
-        base: 'USD', // formData.fromCur,
-        symbol: 'JPY', // Adjusted to pass a single currency as required
-        start: "2023-01-01",
-        end: "2023-01-31",
-    })
+ 
 
     return (
         <>
