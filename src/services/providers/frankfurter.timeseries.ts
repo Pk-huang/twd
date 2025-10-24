@@ -18,8 +18,7 @@ export const FrankfurterTimeseriesProvider: RatesProvider = {
     url.searchParams.set("base", baseCurrency.toUpperCase());
     url.searchParams.set("symbols", symbolCurrency.toUpperCase());
  
-     console.log("Frankfurter timeseries URL:", url.toString());
-    const response = await fetch(url.toString());
+   const response = await fetch(url.toString());
     
     if (!response.ok) {
       throw new ProviderError("frankfurter", "NETWORK", `HTTP ${response.status}`);
@@ -29,9 +28,7 @@ export const FrankfurterTimeseriesProvider: RatesProvider = {
       rates?: Record<string, Record<string, number>>;
     };
 
-    console.log("Frankfurter timeseries payload:", payload);
-
-    if (!payload?.rates) {
+   if (!payload?.rates) {
       throw new ProviderError("frankfurter", "UNKNOWN", "Empty timeseries data");
     }
 

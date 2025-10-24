@@ -9,13 +9,27 @@ import type { Rates, FormState } from "../function/types";
 import RatesLineChart from "./RatesLineChart";
 import { buildSeriesFromTimeseries } from "../function/series";
 
-import {  fetchTimeseries } from "../services/rates.repository";
+import { fetchTimeseries } from "../services/rates.repository";
+import DateRangeControls from "./DateRangeControls";
+
 
 
 
 const WATCH_LIST = ["USD", "EUR", "JPY", "CNY"] as const;
 
 const fallbackRates: Rates = {};
+
+function formatDateToISO(date: Date): string {
+    return date.toISOString().slice(0, 10);
+}
+function getDefaultRange(days: number = 14) {
+    const today = new Date();
+    const start = new Date(today);
+    start.setDate(today.getDate() - (days - 1));
+    return { startDateString: formatDateToISO(start), endDateString: formatDateToISO(today) };
+}
+
+
 
 export default function ConverterContainer() {
     // 匯率
@@ -77,31 +91,52 @@ export default function ConverterContainer() {
             : convertAmount(formData.amt, formData.fromCur, formData.toCur, rates);
     }, [formData.amt, formData.source, formData.fromCur, formData.toCur, rates]);
 
-    // 以 fromCur 為基準的金額（供卡片批次換算）
-    const baseAmountInFromCur = useMemo(() => {
-        return formData.source === "from"
-            ? formData.amt
-            : convertAmount(formData.amt, formData.toCur, formData.fromCur, rates);
-    }, [formData.amt, formData.source, formData.fromCur, formData.toCur, rates]);
+ 
+    // 新增：日期區間 state（預設近 14 天）
+    const [dateRange, setDateRange] = useState(() => getDefaultRange(14));
+    const { startDateString, endDateString } = dateRange;
 
+    const handleRangeChange = (nextStartDateString: string, nextEndDateString: string) => {
+        setDateRange({ startDateString: nextStartDateString, endDateString: nextEndDateString });
+    };
 
+    // 抓取 timeseries（依 fromCur/toCur/日期區間 變化）
     const [timeseriesData, setTimeseriesData] = useState<Record<string, number>>({});
-   
+    const [isTimeseriesLoading, setIsTimeseriesLoading] = useState(false);
+    const [timeseriesError, setTimeseriesError] = useState<string | null>(null);
+
     useEffect(() => {
+        let isAlive = true;
         (async () => {
             try {
-                const data = await fetchTimeseries(formData.fromCur ,formData.toCur, "2024-01-01", "2024-01-14");
+                setIsTimeseriesLoading(true);
+                setTimeseriesError(null);
+                const data = await fetchTimeseries(
+                    formData.fromCur,
+                    formData.toCur,
+                    startDateString,
+                    endDateString
+                );
+                if (!isAlive) return;
                 setTimeseriesData(data);
             } catch (error) {
-                console.error(error);
+                if (!isAlive) return;
+                setTimeseriesError(error instanceof Error ? error.message : String(error));
+                setTimeseriesData({});
+            } finally {
+                if (isAlive) setIsTimeseriesLoading(false);
             }
         })();
-    }, []);
+        return () => { isAlive = false; };
+    }, [formData.fromCur, formData.toCur, startDateString, endDateString]);
 
+    // 轉換為圖表可用陣列
     const lineSeries = useMemo(
         () => buildSeriesFromTimeseries(timeseriesData),
         [timeseriesData]
     );
+
+    // …你的 TopControls / RatesCards 等 
 
     return (
         <>
@@ -129,19 +164,33 @@ export default function ConverterContainer() {
                 </div>
 
             </div>
+            <DateRangeControls
+                startDateString={startDateString}
+                endDateString={endDateString}
+                onChange={handleRangeChange}
+                // 可選：限制最小/最大可選日期
+                // minDateString="1999-01-04"
+                maxDateString={formatDateToISO(new Date())}
+            />
+
 
             {/* 下方卡片（單張：左基準 + 中列表 + 右重點） */}
-            <section className="mt-4">
-                <ul className="list-unstyled row flex-wrap justify-content-between">
-                    <RatesCards
-                        rates={rates}
-                        watchList={WATCH_LIST}
-                        fromCur={formData.fromCur}
-                        toCur={formData.toCur}
-                        baseAmountInFromCur={baseAmountInFromCur ?? ""}
-                        onSelectCurrency={(code) => update({ toCur: code })}
+            <section className="mt-3">
+                {isTimeseriesLoading && (
+                    <div className="alert alert-light">Loading chart…</div>
+                )}
+                {timeseriesError && (
+                    <div className="alert alert-warning">
+                        曲線資料抓取失敗：{timeseriesError}
+                    </div>
+                )}
+                {!isTimeseriesLoading && !timeseriesError && (
+                    <RatesLineChart
+                        fromCurrency={formData.fromCur}
+                        toCurrency={formData.toCur}
+                        series={lineSeries}
                     />
-                </ul>
+                )}
             </section>
         </>
     );
