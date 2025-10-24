@@ -19,13 +19,13 @@ export default function TopControls({
 }: Props) {
   return (
     <>
-    <div className="row">
+    <div className="row  p-3">
 
   
-      <div className="col-12  d-flex flex-column">
-        <h3>Unit conversion (From)</h3>
+      <div className="col-6  d-flex flex-column ">
+        <h5 className="px-2">Unit conversion (From)</h5>
         <select
-          className="form-select my-3"
+          className="form-select border-0 bg-body-secondary"
           value={formData.fromCur}
           onChange={(e) => onChange({ fromCur: e.target.value })}
         >
@@ -36,17 +36,17 @@ export default function TopControls({
           ))}
         </select>
         <input
-          className="form-control"
+          className="form-control mt-2 border-0 bg-body-secondary"
           placeholder="Enter amount"
           value={fromAmount}
           onChange={(e) => onChange({ source: "from", amt: e.target.value })}
         />
       </div>
 
-      <div className="col-12 d-flex flex-column">
-        <h3>Unit conversion (To)</h3>
+      <div className="col-6 d-flex flex-column ">
+        <h5 className="px-2">Unit conversion (To)</h5>
         <select
-          className="form-select my-3"
+          className="form-select border-0 bg-body-secondary"
           value={formData.toCur}
           onChange={(e) => onChange({ toCur: e.target.value })}
         >
@@ -57,7 +57,7 @@ export default function TopControls({
           ))}
         </select>
         <input
-          className="form-control"
+          className="form-control mt-2 border-0 bg-body-secondary"
           placeholder="Enter amount"
           value={toAmount}
           onChange={(e) => onChange({ source: "to", amt: e.target.value })}

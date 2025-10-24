@@ -1,22 +1,21 @@
-
+import ThemeToggleButton from "./ThemeToggleButton";
 
 const Navbar = () => {
 
     return (
         <>
             <header>
-                <nav className="navbar navbar-expand-lg bg-white">
+                <nav className="navbar navbar-expand-lg ">
                     <div className="container">
                         <a className="navbar-brand" href="#">Navbar</a>
 
                         <div className="collapse navbar-collapse" id="navbarSupportedContent">
                             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-                                <button className="btn-dark btn">Dark</button>
+                            <ThemeToggleButton />
                             </ul>
                         </div>
                     </div>
                 </nav>
-
             </header>
         </>
     )

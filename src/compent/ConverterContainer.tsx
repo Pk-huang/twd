@@ -15,6 +15,7 @@ import DateRangeControls from "./DateRangeControls";
 
 
 
+
 const WATCH_LIST = ["USD", "EUR", "JPY", "CNY"] as const;
 
 const fallbackRates: Rates = {};
@@ -91,7 +92,7 @@ export default function ConverterContainer() {
             : convertAmount(formData.amt, formData.fromCur, formData.toCur, rates);
     }, [formData.amt, formData.source, formData.fromCur, formData.toCur, rates]);
 
- 
+
     // 新增：日期區間 state（預設近 14 天）
     const [dateRange, setDateRange] = useState(() => getDefaultRange(14));
     const { startDateString, endDateString } = dateRange;
@@ -146,7 +147,7 @@ export default function ConverterContainer() {
 
             {/* 上方輸入區 */}
             <div className="row align-items-start">
-                <div className="col-6">
+                <div className="col-12">
                     <TopControls
                         currencyOptions={currencyOptions}
                         fromAmount={fromAmount ?? ""}
@@ -155,42 +156,48 @@ export default function ConverterContainer() {
                         onChange={update}
                     />
                 </div>
-                <div className="col-6">
-                    <RatesLineChart
-                        fromCurrency={formData.fromCur}
-                        toCurrency={formData.toCur}
-                        series={lineSeries}
+                <div className="col-12 py-3 ">
+                    <DateRangeControls
+                        startDateString={startDateString}
+                        endDateString={endDateString}
+                        onChange={handleRangeChange}
+                        // 可選：限制最小/最大可選日期
+                        // minDateString="1999-01-04"
+                        maxDateString={formatDateToISO(new Date())}
                     />
+                    {isTimeseriesLoading && (
+                        <div className="alert alert-light">Loading chart…</div>
+                    )}
+                    {timeseriesError && (
+                        <div className="alert alert-warning">
+                            曲線資料抓取失敗：{timeseriesError}
+                        </div>
+                    )}
+                    {!isTimeseriesLoading && !timeseriesError && (
+                        <RatesLineChart
+                            fromCurrency={formData.fromCur}
+                            toCurrency={formData.toCur}
+                            series={lineSeries}
+                        />
+                    )}
                 </div>
 
             </div>
-            <DateRangeControls
-                startDateString={startDateString}
-                endDateString={endDateString}
-                onChange={handleRangeChange}
-                // 可選：限制最小/最大可選日期
-                // minDateString="1999-01-04"
-                maxDateString={formatDateToISO(new Date())}
-            />
+
 
 
             {/* 下方卡片（單張：左基準 + 中列表 + 右重點） */}
             <section className="mt-3">
-                {isTimeseriesLoading && (
-                    <div className="alert alert-light">Loading chart…</div>
-                )}
-                {timeseriesError && (
-                    <div className="alert alert-warning">
-                        曲線資料抓取失敗：{timeseriesError}
-                    </div>
-                )}
-                {!isTimeseriesLoading && !timeseriesError && (
-                    <RatesLineChart
-                        fromCurrency={formData.fromCur}
-                        toCurrency={formData.toCur}
-                        series={lineSeries}
+                <ul className="list-unstyled row flex-wrap justify-content-between">
+                    <RatesCards
+                        rates={rates}
+                        watchList={WATCH_LIST}
+                        fromCur={formData.fromCur}
+                        toCur={formData.toCur}
+                        baseAmountInFromCur={fromAmount ?? ""}
+                        onSelectCurrency={(code) => update({ toCur: code })}
                     />
-                )}
+                </ul>
             </section>
         </>
     );

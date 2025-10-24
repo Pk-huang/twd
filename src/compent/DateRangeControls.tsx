@@ -58,7 +58,7 @@ export default function DateRangeControls({
   );
 
   return (
-    <div className="card my-3">
+    <div className="card rounded-0 border border-0 bg-body-secondary">
       <div className="card-body">
         <div className="d-flex align-items-center flex-wrap gap-2">
           <label className="form-label mb-0 me-2">日期區間：</label>

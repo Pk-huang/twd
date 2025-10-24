@@ -9,16 +9,8 @@
     /* color: #2a7dd0; */
 }
 
-.card {
-    box-shadow: 0 0 15px rgba(177, 177, 177, 0.134);
-    border-radius: 10px;
-    border: none;
-}
 
-body {
-    background:  url('public/img/cartoon_plane_flipped_small.png') 100% 0% / auto no-repeat, #f8f9fa  ;
-   
-}
+
 
 @media (min-width: 3000px) {
 
