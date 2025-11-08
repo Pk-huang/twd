@@ -34,7 +34,7 @@ import {
     };
   
     return (
-      <div className="card rounded-0 border border-0 bg-body-secondary">
+      <div className="card rounded-0 border border-0 ">
         <div className="card-body">
           <h5 className="card-title mb-3">
             {title ?? `Trend: ${fromCurrency} → ${toCurrency}`}

@@ -6,7 +6,7 @@ export default function ThemeToggleButton() {
   return (
     <button
       type="button"
-      className="btn btn-outline-secondary"
+      className="btn navBtn"
       onClick={toggleThemeMode}
       aria-label="Toggle theme"
       title="切換主題"

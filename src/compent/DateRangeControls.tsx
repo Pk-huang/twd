@@ -58,14 +58,14 @@ export default function DateRangeControls({
   );
 
   return (
-    <div className="card rounded-0 border border-0 bg-body-secondary">
+    <div className="card rounded-0 border border-0 ">
       <div className="card-body">
         <div className="d-flex align-items-center flex-wrap gap-2">
           <label className="form-label mb-0 me-2">日期區間：</label>
 
           <input
             type="date"
-            className="form-control"
+            className="form-control border-0 bg-body-secondary"
             style={{ width: 180 }}
             value={startDateString}
             min={minDateString}
@@ -77,7 +77,7 @@ export default function DateRangeControls({
 
           <input
             type="date"
-            className="form-control"
+            className="form-control border-0 bg-body-secondary"
             style={{ width: 180 }}
             value={endDateString}
             min={minDateString}
@@ -86,15 +86,15 @@ export default function DateRangeControls({
           />
 
           <div className="ms-auto d-flex gap-2">
-            <button type="button" className="btn btn-outline-secondary btn-sm"
+            <button type="button" className="btn bg-body-secondary btn-sm"
               onClick={() => applyPresetDays(7)}>
               近 7 天
             </button>
-            <button type="button" className="btn btn-outline-secondary btn-sm"
+            <button type="button" className="btn bg-body-secondary btn-sm"
               onClick={() => applyPresetDays(14)}>
               近 14 天
             </button>
-            <button type="button" className="btn btn-outline-secondary btn-sm"
+            <button type="button" className="btn bg-body-secondary btn-sm"
               onClick={() => applyPresetDays(30)}>
               近 30 天
             </button>

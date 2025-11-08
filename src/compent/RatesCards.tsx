@@ -57,7 +57,7 @@ export default function RatesCards({
             return (
               <li
                 key={`${baseCode}->${code}`}
-                className={`my-2 ${isActive ? "fw-bold" : ""}`}
+                className={`my-2 ${isActive ? "fw-bold" : ""} d-flex flex-column me-3`}
                 role={onSelectCurrency ? "button" : undefined}
                 onClick={() => onSelectCurrency?.(code)}
               >
@@ -70,22 +70,22 @@ export default function RatesCards({
           });
 
         return (
-          <li key={baseCode} className="my-lg-3 my-md-1 col-6">
-            <div className="card">
-              <div className="card-body row p-lg-5 p-md-2">
+          <li key={baseCode} className="my-lg-3 my-md-1 col-md-3 ">
+            <div className="card border-0 bg-body-tertiary py-3 px-2">
+              <div className="card-body row p-md-2">
                 {/* 左欄：本卡片基準幣別 */}
-                <div className="col-12 col-md-3 pb-3">
+                <div className="col-12 col-md-12 pb-3">
                   <h3 className="card-title mb-0">{baseCode}</h3>
                 </div>
 
                 {/* 中欄：1 base -> 其他幣別的單位匯率 */}
                 <div className="col-12 col-md-12 pb-3">
-                  <ul className="list-unstyled mb-0">{listItems}</ul>
+                  <ul className="list-unstyled d-flex mb-0">{listItems}</ul>
                 </div>
 
                 {/* 右欄：依照當前匯率計算 (baseCode × Unit conversion) */}
                 <div className="col ">
-                  <h2 className="h4">依照當前匯率計算 Unit conversion</h2>
+                  <h6 className="">依照當前匯率計算 Unit conversion</h6>
                   <div className="mt-2">
                   <div className="fs-5 mt-2">
                      

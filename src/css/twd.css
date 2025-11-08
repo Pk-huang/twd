@@ -10,8 +10,6 @@
 }
 
 
-
-
 @media (min-width: 3000px) {
 
     .container,
@@ -22,4 +20,35 @@
     .container-xxl {
         max-width: 1600px;
     }
+}
+
+:root,
+:root.theme-light,
+html[data-bs-theme="light"] {
+    /* 淺色主題可覆蓋的變數 */
+       --nav-bg: #0f1115;
+       --nav-color: #fff;
+       --nav-mode-bg: #ffffff;
+}
+
+:root.theme-dark,
+html[data-bs-theme="dark"] {
+    /* 深色主題可覆蓋的變數 */
+    --nav-bg: #f8f9fa;
+    --nav-color: #0f1115;
+    --nav-mode-bg: #0f1115;
+}
+
+nav{
+    background: var(--nav-bg);
+}
+
+nav .navbar-brand{
+    color: var(--bs-body-bg);
+}
+
+.navBtn{
+    color: var(--nav-bg);
+    border-color: var(--nav-color);
+    background-color: var(--nav-mode-bg);
 }
