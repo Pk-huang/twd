@@ -38,6 +38,9 @@ export default function ConverterContainer() {
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+
+   
+
     // 表單狀態
     const [formData, setFormData] = useState<FormState>({
         fromCur: "USD",
@@ -47,6 +50,10 @@ export default function ConverterContainer() {
     });
     const update = (patch: Partial<FormState>) =>
         setFormData((prev) => ({ ...prev, ...patch }));
+
+    const swapCurrencies = () => setFormData((previous) => ({
+        ...previous, fromCur: previous.toCur, toCur: previous.fromCur
+      }));
 
     // 抓最新匯率（保留你 services 架構）
     useEffect(() => {
@@ -154,6 +161,7 @@ export default function ConverterContainer() {
                         toAmount={toAmount ?? ""}
                         formData={formData}
                         onChange={update}
+                        onSwap={swapCurrencies}
                     />
                 </div>
                 <div className="col-12 py-3 ">

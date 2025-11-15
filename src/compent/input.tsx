@@ -75,7 +75,7 @@ export default function ConverterTwoWay() {
     <section className="pt-5 pb-3 section-input">
       <div className="row justify-content-center align-items-start">
         <div className="col-5 p-lg-5 d-flex flex-column">
-          <h3>Unit conversion (From)</h3>
+          <h3 className="">Unit conversion (From)</h3>
           <select
             className="form-select my-3"
             value={formData.fromCur}

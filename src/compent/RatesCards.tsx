@@ -71,7 +71,7 @@ export default function RatesCards({
 
         return (
           <li key={baseCode} className="my-lg-3 my-md-1 col-md-3 ">
-            <div className="card border-0 bg-body-tertiary py-3 px-2">
+            <div className="card border-0 bg-body-tertiary py-3 px-2 ">
               <div className="card-body row p-md-2">
                 {/* 左欄：本卡片基準幣別 */}
                 <div className="col-12 col-md-12 pb-3">

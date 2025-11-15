@@ -1,3 +1,5 @@
+html, body { transition: background-color .25s ease, color .25s ease; }
+
 .section-input {
     box-shadow: 0 0 15px rgba(177, 177, 177, 0.134);
     border-radius: 10px;
@@ -26,29 +28,60 @@
 :root.theme-light,
 html[data-bs-theme="light"] {
     /* 淺色主題可覆蓋的變數 */
-       --nav-bg: #0f1115;
-       --nav-color: #fff;
-       --nav-mode-bg: #ffffff;
-}
-
-:root.theme-dark,
-html[data-bs-theme="dark"] {
-    /* 深色主題可覆蓋的變數 */
     --nav-bg: #f8f9fa;
     --nav-color: #0f1115;
     --nav-mode-bg: #0f1115;
 }
 
-nav{
+:root.theme-dark,
+html[data-bs-theme="dark"] {
+    /* 深色主題可覆蓋的變數 */
+    --nav-bg: #0f1115;
+    --nav-color: #fff;
+    --nav-mode-bg: #ffffff;
+}
+
+nav {
     background: var(--nav-bg);
 }
 
-nav .navbar-brand{
-    color: var(--bs-body-bg);
+nav .navbar-brand {
+    color: var(--nav-color);
 }
 
-.navBtn{
-    color: var(--nav-bg);
-    border-color: var(--nav-color);
-    background-color: var(--nav-mode-bg);
+.navBtn {
+    color: var(--nav-color);
+
+    background-color: var(--nav-bg);
+}
+
+/* 區塊層級與字重 */
+.section-title {
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+section+section {
+    margin-top: 2.5rem;
+}
+
+/* 卡片 hover 提升層次 */
+.card {
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .12);
+}
+
+/* 日期快速範圍 - active 樣式 */
+.btn-range {
+    min-width: 72px;
+}
+
+.btn-range.active {
+    color: #fff;
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
 }
