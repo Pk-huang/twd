@@ -9,8 +9,11 @@ import type { Rates, FormState } from "../function/types";
 import RatesLineChart from "./RatesLineChart";
 import { buildSeriesFromTimeseries } from "../function/series";
 
-import { fetchTimeseries } from "../services/rates.repository";
+
+// 🔽 新增
 import DateRangeControls from "./DateRangeControls";
+import { calcStartByDays, formatDateToISO } from "../function/dateUtils";
+import { fetchTimeseries } from "../services/rates.repository";
 
 
 
@@ -20,18 +23,6 @@ const WATCH_LIST = ["USD", "EUR", "JPY", "CNY"] as const;
 
 const fallbackRates: Rates = {};
 
-function formatDateToISO(date: Date): string {
-    return date.toISOString().slice(0, 10);
-}
-function getDefaultRange(days: number = 14) {
-    const today = new Date();
-    const start = new Date(today);
-    start.setDate(today.getDate() - (days - 1));
-    return { startDateString: formatDateToISO(start), endDateString: formatDateToISO(today) };
-}
-
-
-
 export default function ConverterContainer() {
     // 匯率
     const [rates, setRates] = useState<Rates>(fallbackRates);
@@ -39,7 +30,7 @@ export default function ConverterContainer() {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
 
-   
+
 
     // 表單狀態
     const [formData, setFormData] = useState<FormState>({
@@ -51,9 +42,7 @@ export default function ConverterContainer() {
     const update = (patch: Partial<FormState>) =>
         setFormData((prev) => ({ ...prev, ...patch }));
 
-    const swapCurrencies = () => setFormData((previous) => ({
-        ...previous, fromCur: previous.toCur, toCur: previous.fromCur
-      }));
+
 
     // 抓最新匯率（保留你 services 架構）
     useEffect(() => {
@@ -99,22 +88,30 @@ export default function ConverterContainer() {
             : convertAmount(formData.amt, formData.fromCur, formData.toCur, rates);
     }, [formData.amt, formData.source, formData.fromCur, formData.toCur, rates]);
 
+    // 交換幣別（可一起對調輸入來源）
+    const swapCurrencies = () =>
+        setFormData(prev => ({
+            ...prev,
+            fromCur: prev.toCur,
+            toCur: prev.fromCur,
+            source: prev.source === "from" ? "to" : "from",
+        }));
 
-    // 新增：日期區間 state（預設近 14 天）
-    const [dateRange, setDateRange] = useState(() => getDefaultRange(14));
-    const { startDateString, endDateString } = dateRange;
+    // 日期區間（預設近 14 天）
+    const [dateRange, setDateRange] = useState(() => {
+        const end = formatDateToISO(new Date());
+        const start = calcStartByDays(end, 14);
+        return { startDateString: start, endDateString: end };
+    });
+    const [selectedPresetDays, setSelectedPresetDays] = useState<number | null>(14);
 
-    const handleRangeChange = (nextStartDateString: string, nextEndDateString: string) => {
-        setDateRange({ startDateString: nextStartDateString, endDateString: nextEndDateString });
-    };
-
-    // 抓取 timeseries（依 fromCur/toCur/日期區間 變化）
+    // timeseries 狀態
     const [timeseriesData, setTimeseriesData] = useState<Record<string, number>>({});
     const [isTimeseriesLoading, setIsTimeseriesLoading] = useState(false);
     const [timeseriesError, setTimeseriesError] = useState<string | null>(null);
 
     useEffect(() => {
-        let isAlive = true;
+        let alive = true;
         (async () => {
             try {
                 setIsTimeseriesLoading(true);
@@ -122,21 +119,21 @@ export default function ConverterContainer() {
                 const data = await fetchTimeseries(
                     formData.fromCur,
                     formData.toCur,
-                    startDateString,
-                    endDateString
+                    dateRange.startDateString,
+                    dateRange.endDateString
                 );
-                if (!isAlive) return;
-                setTimeseriesData(data);
+                if (alive) setTimeseriesData(data);
             } catch (error) {
-                if (!isAlive) return;
-                setTimeseriesError(error instanceof Error ? error.message : String(error));
-                setTimeseriesData({});
+                if (alive) {
+                    setTimeseriesError(error instanceof Error ? error.message : String(error));
+                    setTimeseriesData({});
+                }
             } finally {
-                if (isAlive) setIsTimeseriesLoading(false);
+                if (alive) setIsTimeseriesLoading(false);
             }
         })();
-        return () => { isAlive = false; };
-    }, [formData.fromCur, formData.toCur, startDateString, endDateString]);
+        return () => { alive = false; };
+    }, [formData.fromCur, formData.toCur, dateRange.startDateString, dateRange.endDateString]);
 
     // 轉換為圖表可用陣列
     const lineSeries = useMemo(
@@ -166,13 +163,17 @@ export default function ConverterContainer() {
                 </div>
                 <div className="col-12 py-3 ">
                     <DateRangeControls
-                        startDateString={startDateString}
-                        endDateString={endDateString}
-                        onChange={handleRangeChange}
-                        // 可選：限制最小/最大可選日期
-                        // minDateString="1999-01-04"
+                        startDateString={dateRange.startDateString}
+                        endDateString={dateRange.endDateString}
+                        onChange={(start, end) => {
+                            setDateRange({ startDateString: start, endDateString: end });
+                            setSelectedPresetDays(null); // 手動改日期 → 取消 active
+                        }}
+                        selectedPresetDays={selectedPresetDays}
+                        onPresetSelect={setSelectedPresetDays}
                         maxDateString={formatDateToISO(new Date())}
                     />
+
                     {isTimeseriesLoading && (
                         <div className="alert alert-light">Loading chart…</div>
                     )}

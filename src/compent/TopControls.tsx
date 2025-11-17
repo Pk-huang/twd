@@ -1,6 +1,8 @@
 // src/components/TopControls.tsx
 // src/components/TopControls.tsx
+import { faArrowRightArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowRightArrowLeft";
 import type { FormState } from "../function/types";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 type Props = {
   currencyOptions: string[];
@@ -47,7 +49,8 @@ export default function TopControls({
         <div className="col-1 d-flex justify-content-center align-items-center">
           
             <button type="button" className="btn  mt-4" onClick={onSwap} title="Swap currencies">
-              <img src="public/img/exchange.svg" alt="" className="w-50" />
+            <FontAwesomeIcon icon={faArrowRightArrowLeft} />
+            
             </button>
           
         </div>

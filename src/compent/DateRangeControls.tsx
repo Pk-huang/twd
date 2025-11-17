@@ -1,24 +1,20 @@
 // src/compent/DateRangeControls.tsx
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
+import { calcStartByDays, clampDateString, formatDateToISO } from "../function/dateUtils";
 
-type Props = {
+type DateRangeControlsProps = {
   startDateString: string;   // YYYY-MM-DD
   endDateString: string;     // YYYY-MM-DD
   onChange: (nextStartDateString: string, nextEndDateString: string) => void;
-  minDateString?: string;    // 可選：限制最小日期（例如資料源可查詢的最早日）
-  maxDateString?: string;    // 可選：限制最大日期（通常是今天）
+
+  // 可選：限制可選範圍
+  minDateString?: string;    // 預設 1999-01-04
+  maxDateString?: string;    // 預設今天
+
+  // 快速範圍
+  selectedPresetDays: number | null;      // 7 | 14 | 30 | null
+  onPresetSelect: (days: number) => void;
 };
-
-function formatDateToISO(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-function daysAgoISO(days: number): string {
-  const today = new Date();
-  const from = new Date(today);
-  from.setDate(today.getDate() - (days - 1));
-  return formatDateToISO(from);
-}
 
 export default function DateRangeControls({
   startDateString,
@@ -26,79 +22,92 @@ export default function DateRangeControls({
   onChange,
   minDateString,
   maxDateString,
-}: Props) {
+  selectedPresetDays,
+  onPresetSelect,
+}: DateRangeControlsProps) {
+  const todayISO = useMemo(() => formatDateToISO(new Date()), []);
+  const minISO = minDateString ?? "1999-01-04";
+  const maxISO = maxDateString ?? todayISO;
+
+  /** 統一出口：先校正（clamp、start<=end），再丟給父層 */
+  const emitCorrected = useCallback(
+    (rawStart: string, rawEnd: string) => {
+      const startClamped = clampDateString(rawStart, minISO, maxISO);
+      const endClamped = clampDateString(rawEnd, minISO, maxISO);
+
+      const startFixed = startClamped <= endClamped ? startClamped : endClamped;
+      const endFixed = endClamped >= startClamped ? endClamped : startClamped;
+
+      onChange(startFixed, endFixed);
+    },
+    [minISO, maxISO, onChange]
+  );
+
   const handleStartChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const nextStart = event.target.value;
-      // 若使用者把開始日期調到比結束還晚，則自動把結束推到同一天
-      const adjustedEnd = nextStart > endDateString ? nextStart : endDateString;
-      onChange(nextStart, adjustedEnd);
+      emitCorrected(event.target.value, endDateString);
     },
-    [endDateString, onChange]
+    [emitCorrected, endDateString]
   );
 
   const handleEndChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const nextEnd = event.target.value;
-      // 若使用者把結束日期調到比開始還早，則自動把開始拉到同一天
-      const adjustedStart = nextEnd < startDateString ? nextEnd : startDateString;
-      onChange(adjustedStart, nextEnd);
+      emitCorrected(startDateString, event.target.value);
     },
-    [startDateString, onChange]
+    [emitCorrected, startDateString]
   );
 
-  const applyPresetDays = useCallback(
+  const applyPreset = useCallback(
     (days: number) => {
-      const today = new Date();
-      const start = daysAgoISO(days);
-      const end = formatDateToISO(today);
-      onChange(start, end);
+      const safeEnd = clampDateString(endDateString, minISO, maxISO);
+      const startByPreset = calcStartByDays(safeEnd, days);
+      emitCorrected(startByPreset, safeEnd);
+      onPresetSelect(days);
     },
-    [onChange]
+    [endDateString, minISO, maxISO, emitCorrected, onPresetSelect]
   );
 
   return (
-    <div className="card rounded-0 border border-0 ">
-      <div className="card-body">
-        <div className="d-flex align-items-center flex-wrap gap-2">
-          <label className="form-label mb-0 me-2">日期區間：</label>
+    <div className="card my-3 border-0">
+      <div className="card-body d-flex align-items-center flex-wrap gap-2">
+        <label className="form-label mb-0 me-2">日期區間：</label>
 
-          <input
-            type="date"
-            className="form-control border-0 bg-body-secondary"
-            style={{ width: 180 }}
-            value={startDateString}
-            min={minDateString}
-            max={maxDateString}
-            onChange={handleStartChange}
-          />
+        <input
+          type="date"
+          className="form-control"
+          style={{ width: 180 }}
+          value={startDateString}
+          min={minISO}
+          max={maxISO}
+          onChange={handleStartChange}
+          aria-label="開始日期"
+        />
 
-          <span className="mx-2">—</span>
+        <span className="mx-2">—</span>
 
-          <input
-            type="date"
-            className="form-control border-0 bg-body-secondary"
-            style={{ width: 180 }}
-            value={endDateString}
-            min={minDateString}
-            max={maxDateString}
-            onChange={handleEndChange}
-          />
+        <input
+          type="date"
+          className="form-control"
+          style={{ width: 180 }}
+          value={endDateString}
+          min={minISO}
+          max={maxISO}
+          onChange={handleEndChange}
+          aria-label="結束日期"
+        />
 
-          <div className="ms-auto d-flex gap-2">
-            <button type="button" className="btn bg-body-secondary btn-sm"
-              onClick={() => applyPresetDays(7)}>
-              近 7 天
+        <div className="ms-auto d-flex gap-2">
+          {[7, 14, 30].map((days) => (
+            <button
+              key={days}
+              type="button"
+              className={`btn btn-outline-secondary btn-sm btn-range ${selectedPresetDays === days ? "active" : ""}`}
+              onClick={() => applyPreset(days)}
+              aria-pressed={selectedPresetDays === days}
+            >
+              近 {days} 天
             </button>
-            <button type="button" className="btn bg-body-secondary btn-sm"
-              onClick={() => applyPresetDays(14)}>
-              近 14 天
-            </button>
-            <button type="button" className="btn bg-body-secondary btn-sm"
-              onClick={() => applyPresetDays(30)}>
-              近 30 天
-            </button>
-          </div>
+          ))}
         </div>
       </div>
     </div>

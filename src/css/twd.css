@@ -70,10 +70,10 @@ section+section {
     transition: transform .2s ease, box-shadow .2s ease;
 }
 
-.card:hover {
+/* .card:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 24px rgba(0, 0, 0, .12);
-}
+} */
 
 /* 日期快速範圍 - active 樣式 */
 .btn-range {
