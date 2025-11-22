@@ -34,19 +34,7 @@ export default function RatesCards({
             ? baseAmountInFromCur
             : convertAmount(baseAmountInFromCur, fromCur, baseCode, rates);
 
-        // 單位匯率：1 baseCode 可換多少 toCur
-        const unitRateBaseToToCur =
-          rates[baseCode] && rates[toCur]
-            ? (rates[toCur]! / rates[baseCode]!).toFixed(4)
-            : "";
-
-        // 結果：amountInThisBase × unitRate
-        const highlightConverted = convertAmount(
-          amountInThisBase || "",
-          baseCode,
-          toCur,
-          rates
-        );
+     
 
         // 中欄：列出 1 baseCode 可換多少其他幣別
         const listItems = watchList

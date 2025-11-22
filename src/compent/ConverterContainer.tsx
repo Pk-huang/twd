@@ -1,5 +1,5 @@
 // src/compent/ConverterContainer.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState ,useRef } from "react";
 import TopControls from "./TopControls";
 import RatesCards from "./RatesCards";
 import { getLatest } from "../services/ratesLatest";
@@ -16,12 +16,10 @@ import { calcStartByDays, formatDateToISO } from "../function/dateUtils";
 import { fetchTimeseries } from "../services/rates.repository";
 
 
-
-
-
 const WATCH_LIST = ["USD", "EUR", "JPY", "CNY"] as const;
 
 const fallbackRates: Rates = {};
+
 
 export default function ConverterContainer() {
     // 匯率
@@ -110,30 +108,58 @@ export default function ConverterContainer() {
     const [isTimeseriesLoading, setIsTimeseriesLoading] = useState(false);
     const [timeseriesError, setTimeseriesError] = useState<string | null>(null);
 
+    const debounceTimerRef = useRef<number | null>(null);
+    const abortRef = useRef<AbortController | null>(null);
+
     useEffect(() => {
-        let alive = true;
-        (async () => {
-            try {
-                setIsTimeseriesLoading(true);
-                setTimeseriesError(null);
-                const data = await fetchTimeseries(
-                    formData.fromCur,
-                    formData.toCur,
-                    dateRange.startDateString,
-                    dateRange.endDateString
-                );
-                if (alive) setTimeseriesData(data);
-            } catch (error) {
-                if (alive) {
-                    setTimeseriesError(error instanceof Error ? error.message : String(error));
-                    setTimeseriesData({});
-                }
-            } finally {
-                if (alive) setIsTimeseriesLoading(false);
-            }
-        })();
-        return () => { alive = false; };
-    }, [formData.fromCur, formData.toCur, dateRange.startDateString, dateRange.endDateString]);
+        // 清掉上一個 debounce
+        if (debounceTimerRef.current) {
+          window.clearTimeout(debounceTimerRef.current);
+          debounceTimerRef.current = null;
+        }
+      
+        // 300ms 去抖動，避免快速改動日期/幣別時連續打 API
+        debounceTimerRef.current = window.setTimeout(async () => {
+          // 中斷前一個請求
+          if (abortRef.current) abortRef.current.abort();
+          const controller = new AbortController();
+          abortRef.current = controller;
+      
+          try {
+            setIsTimeseriesLoading(true);
+            setTimeseriesError(null);
+      
+            const data = await fetchTimeseries(
+              formData.fromCur,
+              formData.toCur,
+              dateRange.startDateString,
+              dateRange.endDateString,
+              { signal: controller.signal } // 你的 repository 記得把 signal 往下傳
+            );
+      
+            setTimeseriesData(data);
+          } catch (error: any) {
+            // 被主動中斷就不要顯示錯誤
+            if (error?.name === "AbortError") return;
+            setTimeseriesError(error instanceof Error ? error.message : String(error));
+            setTimeseriesData({});
+          } finally {
+            setIsTimeseriesLoading(false);
+          }
+        }, 300);
+      
+        // 卸載或依賴改變時清理
+        return () => {
+          if (debounceTimerRef.current) {
+            window.clearTimeout(debounceTimerRef.current);
+            debounceTimerRef.current = null;
+          }
+          if (abortRef.current) {
+            abortRef.current.abort();
+            abortRef.current = null;
+          }
+        };
+      }, [formData.fromCur, formData.toCur, dateRange.startDateString, dateRange.endDateString]);
 
     // 轉換為圖表可用陣列
     const lineSeries = useMemo(

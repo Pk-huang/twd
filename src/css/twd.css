@@ -28,7 +28,7 @@ html, body { transition: background-color .25s ease, color .25s ease; }
 :root.theme-light,
 html[data-bs-theme="light"] {
     /* 淺色主題可覆蓋的變數 */
-    --nav-bg: #f8f9fa;
+    --nav-bg: #fff;
     --nav-color: #0f1115;
     --nav-mode-bg: #0f1115;
 }
@@ -68,6 +68,7 @@ section+section {
 /* 卡片 hover 提升層次 */
 .card {
     transition: transform .2s ease, box-shadow .2s ease;
+    
 }
 
 /* .card:hover {
