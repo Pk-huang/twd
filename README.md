@@ -68,3 +68,14 @@ export default tseslint.config([
 ])
 ```
 # twd
+
+## GitHub Pages deploy
+
+This project is configured for GitHub Pages at:
+
+- https://pk-huang.github.io/twd/
+
+Available scripts:
+
+- `npm run build`
+- `npm run deploy`

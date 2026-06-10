@@ -14,6 +14,10 @@ export type ProviderErrorCode =
   | "AUTH"
   | "UNKNOWN";
 
+export interface RequestOptions {
+  signal?: AbortSignal;
+}
+
 /** 供應商錯誤（帶上提供者名稱與錯誤碼） */
 export class ProviderError extends Error {
   code: ProviderErrorCode;
@@ -33,6 +37,7 @@ export interface RatesProvider {
     baseCurrency: string,
     symbolCurrency: string,
     startDateString: string,
-    endDateString: string
+    endDateString: string,
+    options?: RequestOptions
   ): Promise<TimeseriesResult>;
 }

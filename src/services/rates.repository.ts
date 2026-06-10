@@ -1,5 +1,6 @@
 // src/services/rates.repository.ts
 import {
+  type RequestOptions,
   type RatesProvider,
   ProviderError,
   type TimeseriesResult,
@@ -17,7 +18,7 @@ export async function fetchTimeseries(
   symbolCurrency: string,
   startDateString: string,
   endDateString: string,
-  options?: { signal?: AbortSignal }
+  options?: RequestOptions
 ): Promise<TimeseriesResult> {
 
   for (const provider of TS_PROVIDERS) {
@@ -27,7 +28,8 @@ export async function fetchTimeseries(
         baseCurrency,
         symbolCurrency,
         startDateString,
-        endDateString
+        endDateString,
+        options
       );
     } catch {
       continue;

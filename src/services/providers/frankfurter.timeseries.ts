@@ -1,5 +1,10 @@
 // src/services/providers/frankfurter.timeseries.ts
-import { type RatesProvider, type TimeseriesResult, ProviderError } from "../rates.types";
+import {
+  type RatesProvider,
+  type RequestOptions,
+  type TimeseriesResult,
+  ProviderError,
+} from "../rates.types";
 import { FRANKFURTER_BASE } from "../defaultAPI";
 
 
@@ -12,13 +17,14 @@ export const FrankfurterTimeseriesProvider: RatesProvider = {
     baseCurrency: string,
     symbolCurrency: string,
     startDateString: string,
-    endDateString: string
+    endDateString: string,
+    options?: RequestOptions
   ): Promise<TimeseriesResult> {
     const url = new URL(`${FRANKFURTER_BASE}/v1/${startDateString}..${endDateString}`);
     url.searchParams.set("base", baseCurrency.toUpperCase());
     url.searchParams.set("symbols", symbolCurrency.toUpperCase());
  
-   const response = await fetch(url.toString());
+  const response = await fetch(url.toString(), { signal: options?.signal });
     
     if (!response.ok) {
       throw new ProviderError("frankfurter", "NETWORK", `HTTP ${response.status}`);
